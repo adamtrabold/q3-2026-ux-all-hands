@@ -63,13 +63,13 @@
       <div class="preview-panel current">
         <h3>Current slide</h3>
         <div class="preview-wrap">
-          <iframe id="currentFrame" src="q3-2026-ux-all-hands-raising-the-bar.html#slide-1" sandbox="allow-scripts allow-same-origin"></iframe>
+          <iframe id="currentFrame" src="q3-2026-ux-all-hands.html#slide-1" sandbox="allow-scripts allow-same-origin"></iframe>
         </div>
       </div>
       <div class="preview-panel">
         <h3>Next slide</h3>
         <div class="preview-wrap">
-          <iframe id="previewFrame" src="q3-2026-ux-all-hands-raising-the-bar.html#slide-2" sandbox="allow-scripts allow-same-origin"></iframe>
+          <iframe id="previewFrame" src="q3-2026-ux-all-hands.html#slide-2" sandbox="allow-scripts allow-same-origin"></iframe>
         </div>
       </div>
     </div>
@@ -136,8 +136,8 @@
       currentNum.textContent = current;
       notesContent.innerHTML = (notes[current] || '').replace(/\n/g, '<br>');
       const bust = '?_=' + Date.now();
-      currentFrame.src = 'q3-2026-ux-all-hands-raising-the-bar.html' + bust + slideHash(current);
-      previewFrame.src = 'q3-2026-ux-all-hands-raising-the-bar.html' + bust + nextSlideHash();
+      currentFrame.src = 'q3-2026-ux-all-hands.html' + bust + slideHash(current);
+      previewFrame.src = 'q3-2026-ux-all-hands.html' + bust + nextSlideHash();
       prevBtn.disabled = current <= 1;
       nextBtn.disabled = current >= TOTAL;
     }
