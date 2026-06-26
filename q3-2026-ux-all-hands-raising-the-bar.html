@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Q3 2026 UX All Hands — Raising the Bar</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lora:ital,wght@0,400;0,500;0,700;1,500&display=swap" rel="stylesheet">
+  <style>
+    /* ===== CSS VARIABLES — Build Preset (Teal → Purple) ===== */
+    :root {
+      /* WP Engine Brand Colors */
+      --wpe-teal:        #0ECAD4;
+      --wpe-blue:        #006BD6;
+      --wpe-navy:        #002447;
+      --wpe-purple:      #7A45E5;
+      --wpe-green:       #039B5C;
+      --wpe-yellow:      #FFC34E;
+      --wpe-orange:      #FF6119;
+      --wpe-dark-gray:   #1F2426;
+      --wpe-medium-gray: #5B6C74;
+      --wpe-light-gray:  #F4F5F6;
+
+      /* Build Preset Palette */
+      --bg-primary:       var(--wpe-dark-gray);
+      --text-primary:     var(--wpe-light-gray);
+      --text-secondary:   #FFFFFF;
+      --accent-primary:   var(--wpe-teal);
+      --accent-secondary: var(--wpe-purple);
+
+      /* Typography */
+      --font-display: 'Lora', Georgia, serif;
+      --font-body:    'Inter', Helvetica, Arial, sans-serif;
+
+      /* Responsive Typography */
+      --title-size: clamp(2rem, 7vw, 5rem);
+      --h2-size:    clamp(1.4rem, 4vw, 3rem);
+      --h3-size:    clamp(1.1rem, 2.8vw, 2rem);
+      --body-size:  clamp(0.95rem, 1.8vw, 1.25rem);
+      --small-size: clamp(0.8rem, 1.3vw, 1rem);
+
+      /* Easing */
+      --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* ===== RESET & BASE ===== */
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    /* Discrete-slide model: native scroll-snap paging (no scroll-spacer / no scrollY math). */
+    html {
+      scroll-snap-type: y mandatory;
+      scroll-behavior: smooth;
+      height: 100%;
+      overflow-x: hidden;
+    }
+
+    body {
+      height: 100%;
+      overflow-x: hidden;
+      font-family: var(--font-body);
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.6;
+    }
+
+    /* ===== SLIDE SYSTEM ===== */
+    .slide {
+      position: relative;
+      z-index: 1;
+      width: 100vw;
+      height: 100vh;
+      height: 100dvh;
+      scroll-snap-align: start;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* TITLE FRAME BARS — borrowed from SaaS to the Future title slide */
+    .title-bar-top, .title-bar-bottom {
+      position: absolute; left: clamp(1rem, 3vw, 2.5rem); right: clamp(1rem, 3vw, 2.5rem);
+      height: 1px; background: linear-gradient(90deg, var(--wpe-teal), var(--wpe-purple) 60%, transparent);
+      z-index: 2; pointer-events: none;
+      opacity: 0; transition: opacity 1.2s var(--ease-out-expo);
+    }
+    .slide.visible .title-bar-top    { opacity: 0.5; }
+    .slide.visible .title-bar-bottom { opacity: 0.22; }
+    .title-bar-top    { top: 18%; }
+    .title-bar-bottom { bottom: 18%; }
+
+    .slide-content {
+      text-align: center;
+      max-width: 88vw;
+      max-height: 90vh;
+      overflow: hidden;
+      padding: clamp(1rem, 3vw, 2.5rem);
+      /* Block-level reveal — preserves each child's intended opacity (e.g. ghosted artifact grid) */
+      opacity: 0;
+      transition: opacity 0.5s var(--ease-out-expo);
+    }
+    .slide.visible .slide-content { opacity: 1; }
+
+    /* Staggered child entrance — translate only, so custom child opacities are preserved */
+    .slide-content > * {
+      transform: translateY(20px);
+      transition: transform 0.6s var(--ease-out-expo);
+    }
+    .slide.visible .slide-content > * { transform: none; }
+    .slide.visible .slide-content > *:nth-child(1) { transition-delay: 0.08s; }
+    .slide.visible .slide-content > *:nth-child(2) { transition-delay: 0.18s; }
+    .slide.visible .slide-content > *:nth-child(3) { transition-delay: 0.28s; }
+    .slide.visible .slide-content > *:nth-child(4) { transition-delay: 0.38s; }
+    .slide.visible .slide-content > *:nth-child(5) { transition-delay: 0.48s; }
+
+    /* ===== BACKGROUND LAYERS ===== */
+    .bg-layer {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      z-index: 0;
+    }
+
+    /* Ambient gradient orbs */
+    .gradient-accent {
+      position: absolute;
+      width: 560px;
+      height: 560px;
+      background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+      border-radius: 50%;
+      filter: blur(120px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 1.8s var(--ease-out-expo), transform 2s var(--ease-out-expo);
+      will-change: opacity, transform;
+    }
+    .gradient-accent.active { opacity: 0.22; }
+
+    .gradient-accent.top-left  { top: -200px; left: -200px; }
+    .gradient-accent.top-right { top: -200px; right: -200px; }
+    .gradient-accent.center    { top: 50%; left: 50%; transform: translate(-50%, -50%); }
+    .gradient-accent.bottom    { bottom: -200px; left: 50%; transform: translateX(-50%); }
+
+    /* Dot pattern overlay */
+    .pattern-bg {
+      background-image: radial-gradient(circle at 2px 2px, rgba(14, 202, 212, 0.1) 1px, transparent 0);
+      background-size: 40px 40px;
+      opacity: 0;
+      transition: opacity 1.5s var(--ease-out-expo);
+      animation: pattern-drift 20s linear infinite;
+    }
+    .pattern-bg.active { opacity: 0.28; }
+
+    @keyframes pattern-drift {
+      0%   { background-position: 0 0; }
+      100% { background-position: 40px 40px; }
+    }
+
+    /* Particle system */
+    .particles {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .particle {
+      position: absolute;
+      width: 2px; height: 2px;
+      background: rgba(14, 202, 212, 0.35);
+      border-radius: 50%;
+      animation: particle-float 10s ease-in-out infinite;
+    }
+    @keyframes particle-float {
+      0%, 100% { transform: translateY(0) translateX(0); opacity: 0; }
+      10%       { opacity: 1; }
+      90%       { opacity: 1; }
+      100%      { transform: translateY(-100vh) translateX(40px); opacity: 0; }
+    }
+
+    /* ===== TYPOGRAPHY ===== */
+    h1 {
+      font-family: var(--font-display);
+      font-size: var(--title-size);
+      font-weight: 500;
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+      color: var(--text-secondary);
+      margin-bottom: 1.5rem;
+    }
+
+    h2 {
+      font-family: var(--font-display);
+      font-size: var(--h2-size);
+      font-weight: 500;
+      letter-spacing: -0.01em;
+      line-height: 1.2;
+      color: var(--text-secondary);
+      margin-bottom: 1.25rem;
+    }
+
+    h3 {
+      font-family: var(--font-display);
+      font-size: var(--h3-size);
+      font-weight: 400;
+      font-style: italic;
+      color: var(--accent-primary);
+      margin-bottom: 1rem;
+    }
+
+    p {
+      font-size: var(--body-size);
+      line-height: 1.65;
+      color: var(--text-primary);
+      margin-bottom: 0.75rem;
+    }
+
+    .eyebrow {
+      font-family: var(--font-body);
+      font-size: var(--small-size);
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--wpe-medium-gray);
+      margin-bottom: 1rem;
+    }
+
+    .gradient-text {
+      background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-style: italic;
+    }
+
+    .teal { color: var(--accent-primary); }
+    .purple { color: var(--accent-secondary); }
+    .muted { color: var(--wpe-medium-gray); }
+    .white { color: #fff; }
+
+    /* Layout helpers */
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: clamp(2rem, 5vw, 5rem);
+      text-align: left;
+      max-width: min(90vw, 960px);
+      margin: 0 auto;
+    }
+    .two-col .col { padding: 0; }
+    .two-col .divider {
+      border-left: 1px solid rgba(14, 202, 212, 0.3);
+      padding-left: clamp(2rem, 5vw, 5rem);
+    }
+
+    .three-cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: clamp(1rem, 3vw, 2.5rem);
+      text-align: left;
+      max-width: min(90vw, 1000px);
+      margin: 2rem auto 0;
+    }
+    .card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(14, 202, 212, 0.18);
+      border-radius: 12px;
+      padding: clamp(1rem, 2vw, 1.75rem);
+    }
+    .card .num {
+      font-family: var(--font-display);
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      font-weight: 700;
+      color: var(--accent-primary);
+      opacity: 0.35;
+      line-height: 1;
+      margin-bottom: 0.5rem;
+    }
+    .card p { font-size: var(--small-size); margin: 0; }
+
+    .stagger-list {
+      list-style: none;
+      max-width: min(85vw, 760px);
+      margin: 2rem auto 0;
+      text-align: left;
+    }
+    .stagger-list li {
+      font-size: var(--h3-size);
+      font-family: var(--font-display);
+      color: var(--text-secondary);
+      padding: 0.6rem 0;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      display: flex;
+      align-items: baseline;
+      gap: 1rem;
+    }
+    .stagger-list li .mark {
+      font-size: var(--small-size);
+      font-family: var(--font-body);
+      font-weight: 700;
+      color: var(--accent-primary);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      min-width: 1.5rem;
+    }
+
+    .big-statement {
+      font-family: var(--font-display);
+      font-size: var(--title-size);
+      font-weight: 500;
+      letter-spacing: -0.03em;
+      line-height: 1;
+      color: var(--text-secondary);
+      margin-bottom: 0;
+    }
+
+    .crossed {
+      text-decoration: line-through;
+      color: var(--wpe-medium-gray);
+      opacity: 0.5;
+    }
+
+    /* Side slide-in image — "bigfoot" entrance (slide 8) */
+    .peek-img {
+      position: absolute;
+      left: 0;
+      top: 50%;
+      height: clamp(15rem, 78vh, 40rem);
+      width: auto;
+      z-index: 3;
+      opacity: 0;
+      transform: translate(-120%, -50%) rotate(-2deg);
+      transition: opacity 0.9s var(--ease-out-expo), transform 1.05s var(--ease-out-expo);
+      pointer-events: none;
+      filter: drop-shadow(16px 10px 34px rgba(0,0,0,0.5));
+    }
+    .slide.visible .peek-img { opacity: 1; transform: translate(-4%, -50%) rotate(6deg); }
+
+    /* Scattered process artifacts — "This is not design" slide */
+    .not-design-cloud { position: absolute; inset: 0; overflow: hidden; z-index: 20; }
+    .nd-shot {
+      position: absolute;
+      clip-path: url(#squircle);
+      filter: drop-shadow(0 10px 30px rgba(0,0,0,0.5));
+      opacity: 0;
+      transition: opacity 0.6s var(--ease-out-expo);
+    }
+    .nd-shot img { display: block; width: 100%; height: auto; }
+    .slide.visible .nd-shot { opacity: 1; }
+    /* Non-uniform delays so the artifacts pop in a scattered, randomized order */
+    .slide.visible .nd-shot:nth-child(1) { transition-delay: 0.10s; }
+    .slide.visible .nd-shot:nth-child(2) { transition-delay: 0.46s; }
+    .slide.visible .nd-shot:nth-child(3) { transition-delay: 0.22s; }
+    .slide.visible .nd-shot:nth-child(4) { transition-delay: 0.62s; }
+    .slide.visible .nd-shot:nth-child(5) { transition-delay: 0.34s; }
+    .slide.visible .nd-shot:nth-child(6) { transition-delay: 0.74s; }
+
+    /* Quote pull treatment */
+    .pull-quote {
+      max-width: min(85vw, 760px);
+      margin: 0 auto;
+      border-left: 3px solid var(--accent-primary);
+      padding-left: clamp(1.5rem, 4vw, 3rem);
+      text-align: left;
+    }
+    .pull-quote .quote-text {
+      font-family: var(--font-display);
+      font-size: var(--h2-size);
+      font-style: italic;
+      color: var(--text-secondary);
+      line-height: 1.3;
+      margin-bottom: 1rem;
+    }
+    .pull-quote .attribution {
+      font-size: var(--small-size);
+      color: var(--wpe-medium-gray);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    /* ===== NAV CHROME (matched to saas-to-the-future deck) ===== */
+    .progress-bar { position: fixed; top: 0; left: 0; height: 2px; background: linear-gradient(135deg, var(--wpe-teal), var(--wpe-purple)); transition: width 0.3s ease; z-index: 100; pointer-events: none; }
+    .nav-dots { position: fixed; right: clamp(0.75rem, 1.5vw, 1.25rem); top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 7px; z-index: 100; }
+    .nav-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.18); cursor: pointer; transition: all 0.3s ease; border: none; padding: 0; }
+    .nav-dot.active { background: var(--wpe-teal); transform: scale(1.5); box-shadow: 0 0 8px rgba(14,202,212,0.65); }
+    .slide-counter { display: none; }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 768px) {
+      :root {
+        --title-size: clamp(1.75rem, 9vw, 3rem);
+        --h2-size:    clamp(1.2rem, 6.5vw, 2rem);
+      }
+      .two-col    { grid-template-columns: 1fr; gap: 2rem; }
+      .three-cards { grid-template-columns: 1fr; }
+      .nav-dots   { display: none; }
+    }
+
+    @media (max-height: 600px) {
+      :root {
+        --title-size: clamp(1.5rem, 6vw, 2.5rem);
+        --h2-size:    clamp(1.1rem, 4vw, 1.8rem);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.2s !important;
+      }
+      html { scroll-behavior: auto; }
+      .pattern-bg { animation: none; }
+      .slide-content, .slide-content > * { opacity: 1 !important; transform: none !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Squircle clip-path for scattered process artifacts -->
+  <svg width="0" height="0" style="position:absolute">
+    <defs>
+      <clipPath id="squircle" clipPathUnits="objectBoundingBox">
+        <path d="M 1 .5
+          C 1 .1, .98 .005, .82 .005
+          C .6 -.005, .4 -.005, .18 .005
+          C .02 .005, 0 .1, 0 .5
+          C 0 .9, .02 .995, .18 .995
+          C .4 1.005, .6 1.005, .82 .995
+          C .98 .995, 1 .9, 1 .5 Z"/>
+      </clipPath>
+    </defs>
+  </svg>
+
+  <!-- Progress Bar -->
+  <div class="progress-bar" id="progressBar"></div>
+
+  <!-- Nav Dots -->
+  <nav class="nav-dots" id="navDots" aria-label="Slide navigation"></nav>
+
+  <!-- Slide Counter -->
+  <div class="slide-counter" id="slideCounter">1 / 14</div>
+
+  <!-- Background Layers -->
+  <div class="bg-layer">
+    <div class="gradient-accent top-left"  id="gradientTL"></div>
+    <div class="gradient-accent top-right" id="gradientTR"></div>
+    <div class="gradient-accent center"    id="gradientC"></div>
+    <div class="gradient-accent bottom"    id="gradientB"></div>
+  </div>
+  <div class="bg-layer pattern-bg" id="patternBg"></div>
+  <div class="particles" id="particles"></div>
+
+  <!-- ============================================================
+       SLIDES — 14 discrete slides, following the Final Slides + Presenter Script
+       Per-slide background config carried via data-gradients / data-pattern
+       ============================================================ -->
+
+  <!-- ── SLIDE 1 ── Raising the Bar — On screen: "The Fundamentals of the ~Future~" (saas-to-the-future title treatment) -->
+  <section class="slide" id="slide-1" data-gradients="center">
+    <div class="title-bar-top"></div>
+    <div class="title-bar-bottom"></div>
+    <div class="slide-content">
+      <div style="display:flex; justify-content:center; margin-bottom: clamp(0.75rem,1.5vw,1.75rem);">
+        <span style="font-size: var(--small-size); font-weight:600; letter-spacing:0.1em; text-transform:uppercase; padding:0.28rem 0.85rem; border-radius:2rem; border:1px solid rgba(122,69,229,0.35); background:rgba(122,69,229,0.08); color:#9B72F0;">Q3 2026</span>
+      </div>
+      <h1>The Fundamentals<br>of the <span class="gradient-text" style="font-style:italic;">Future</span></h1>
+    </div>
+  </section>
+
+  <!-- ── SLIDE 2 ── Last time / Today — On screen: "First principles" -->
+  <section class="slide" id="slide-2" data-gradients="topLeft">
+    <div class="slide-content">
+      <h1>On <span class="gradient-text">first principles</span></h1>
+    </div>
+  </section>
+
+  <!-- ── SLIDE 3 ── On screen: "This is not design." + scattered process artifacts -->
+  <section class="slide" id="slide-3" data-pattern="true">
+    <div class="not-design-cloud">
+      <div class="nd-shot" style="width:30%; top:5%;  left:1.5%; transform:rotate(-3deg);   z-index:1"><img src="assets/notdesign-01-double-diamond.jpeg" alt="Double diamond diagram"/></div>
+      <div class="nd-shot" style="width:31%; top:3%;  left:66%;  transform:rotate(2.6deg);   z-index:2"><img src="assets/notdesign-04-miro-braindump.png" alt="Miro brain dump"/></div>
+      <div class="nd-shot" style="width:21%; top:45%; left:2%;   transform:rotate(2.2deg);   z-index:3"><img src="assets/notdesign-06-sketch.jpeg" alt="Hand sketch wireframe"/></div>
+      <div class="nd-shot" style="width:21%; top:28%; left:78%;  transform:rotate(-3deg);    z-index:3"><img src="assets/notdesign-05-miro-journey.jpeg" alt="Miro journey map"/></div>
+      <div class="nd-shot" style="width:26%; top:56%; left:4%;   transform:rotate(1.8deg);   z-index:2"><img src="assets/notdesign-03-wireframe.jpeg" alt="Project dashboard wireframe"/></div>
+      <div class="nd-shot" style="width:30%; top:55%; left:64%;  transform:rotate(-2.4deg);  z-index:2"><img src="assets/notdesign-02-design-thinking.png" alt="Design thinking process"/></div>
+    </div>
+    <div class="slide-content" style="position:relative; z-index:10;">
+      <h1>This is<br><span class="gradient-text">not design</span></h1>
+    </div>
+  </section>
+
+  <!-- ── SLIDE 4 ── On screen: "Design is a process of making dreams come true" - the universal traveler -->
+  <section class="slide" id="slide-4" data-gradients="center">
+    <div class="slide-content">
+      <div class="pull-quote">
+        <div class="quote-text">"Design is a <span class="gradient-text">process</span> of making dreams <span class="gradient-text">come true</span>"</div>
+        <div class="attribution">— the universal traveler</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── SLIDE 5 ── On screen: "Delivering the future is hard" -->
+  <section class="slide" id="slide-5" data-gradients="topRight">
+    <div class="slide-content">
+      <h1>Delivering the<br>future is <span class="gradient-text">hard</span></h1>
+    </div>
+  </section>
+
+  <!-- ── SLIDE 6 ── On screen: Our processes have to *adapt* -->
+  <section class="slide" id="slide-6" data-gradients="center" data-pattern="true">
+    <div class="slide-content">
+      <h1>Our processes<br>have to <span class="gradient-text">adapt</span></h1>
+    </div>
+  </section>
+
+  <!-- ── SLIDE 7 ── On screen: "Same as it ever was" + 01/02/03 -->
+  <section class="slide" id="slide-7" data-gradients="topLeft bottom">
+    <div class="slide-content">
+      <h1>Same as it ever was</h1>
+      <div class="three-cards">
+        <div class="card">
+          <div class="num">01</div>
+          <h3 style="font-style: normal; font-size: var(--body-size); color: var(--accent-primary); margin-bottom: 0;">Solve the actual problem.</h3>
+        </div>
+        <div class="card">
+          <div class="num">02</div>
+          <h3 style="font-style: normal; font-size: var(--body-size); color: var(--accent-primary); margin-bottom: 0;">Build resilient systems.</h3>
+        </div>
+        <div class="card">
+          <div class="num">03</div>
+          <h3 style="font-style: normal; font-size: var(--body-size); color: var(--accent-primary); margin-bottom: 0;">Have opinions and drive vision.</h3>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── SLIDE 8 ── On screen: Guinea pigs can't use computers 🐹 -->
+  <section class="slide" id="slide-8" data-gradients="bottom">
+    <div class="slide-content">
+      <h1>Guinea pigs<br><span class="gradient-text">can't use</span><br>computers</h1>
+    </div>
+    <img class="peek-img" src="assets/guinea-pig-food.png" alt="WP Engine Extreme Gourmet Guinea Pig Food">
+  </section>
+
+  <!-- ── SLIDE 9 ── On screen: Design is not a math problem -->
+  <section class="slide" id="slide-9" data-gradients="topRight">
+    <div class="slide-content">
+      <h1>Design is not a<br><span class="gradient-text">math problem</span></h1>
+    </div>
+  </section>
+
+  <!-- ── SLIDE 10 ── On screen: Doing the right thing, together -->
+  <section class="slide" id="slide-10" data-gradients="topLeft">
+    <div class="slide-content">
+      <h1>Doing the right thing,<br><span class="gradient-text">together</span></h1>
+    </div>
+  </section>
+
+  <!-- ── SLIDE 11 ── On screen: Alignment *is* the work -->
+  <section class="slide" id="slide-11" data-gradients="bottom" data-pattern="true">
+    <div class="slide-content">
+      <div class="big-statement">Alignment <span class="gradient-text">is</span> the work</div>
+    </div>
+  </section>
+
+  <!-- ── SLIDE 12 ── On screen: Are we delivering our customers' dreams? -->
+  <section class="slide" id="slide-12" data-gradients="center">
+    <div class="slide-content">
+      <div class="big-statement">
+        Are we delivering our<br><span class="gradient-text">customers' dreams?</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── SLIDE 13 ── On screen: Our work is the product -->
+  <section class="slide" id="slide-13" data-gradients="topRight">
+    <div class="slide-content">
+      <div class="big-statement">Our <span class="gradient-text">work</span> is the <span class="gradient-text">product</span></div>
+    </div>
+  </section>
+
+  <!-- ── SLIDE 14 ── On screen: Move forward with intention. -->
+  <section class="slide" id="slide-14" data-gradients="center">
+    <div class="slide-content">
+      <h1>Move forward<br>with <span class="gradient-text">intention</span></h1>
+    </div>
+  </section>
+
+  <script>
+    /* ============================================================
+       Discrete-slide engine (scroll-snap + IntersectionObserver)
+       Adapted from the saas-to-the-future deck.
+       ============================================================ */
+    class SlidePresentation {
+      constructor() {
+        this.slides       = Array.from(document.querySelectorAll('.slide'));
+        this.totalSlides  = this.slides.length;
+        this.currentSlide = 0;
+        this.progressBar  = document.getElementById('progressBar');
+        this.navDotsEl    = document.getElementById('navDots');
+        this.slideCounter = document.getElementById('slideCounter');
+        this.dots         = [];
+
+        // Background layers toggled per-slide
+        this.gradientTL = document.getElementById('gradientTL');
+        this.gradientTR = document.getElementById('gradientTR');
+        this.gradientC  = document.getElementById('gradientC');
+        this.gradientB  = document.getElementById('gradientB');
+        this.patternBg  = document.getElementById('patternBg');
+
+        this.scrollLocked = false;
+        this.init();
+      }
+
+      init() {
+        this.createParticles();
+        this.buildDots();
+        this.setupObserver();
+        this.setupKeyboard();
+        this.setupTouch();
+        this.setupWheel();
+        // Deep-link start (used by presenter-view iframes): #slide-N
+        const hash = location.hash.match(/^#slide-(\d+)/);
+        const startIdx = hash ? Math.max(0, Math.min(parseInt(hash[1], 10) - 1, this.totalSlides - 1)) : 0;
+        if (startIdx > 0) {
+          this.slides[startIdx].scrollIntoView();
+          this.slides[startIdx].classList.add('visible');
+        }
+        this.updateUI(startIdx);
+      }
+
+      createParticles() {
+        const container = document.getElementById('particles');
+        for (let i = 0; i < 22; i++) {
+          const p = document.createElement('div');
+          p.className = 'particle';
+          p.style.left              = Math.random() * 100 + 'vw';
+          p.style.animationDelay    = Math.random() * 10 + 's';
+          p.style.animationDuration = (9 + Math.random() * 5) + 's';
+          container.appendChild(p);
+        }
+      }
+
+      buildDots() {
+        this.slides.forEach((_, i) => {
+          const btn = document.createElement('button');
+          btn.className = 'nav-dot';
+          btn.setAttribute('aria-label', `Slide ${i + 1} of ${this.totalSlides}`);
+          btn.addEventListener('click', () => this.goTo(i));
+          this.navDotsEl.appendChild(btn);
+          this.dots.push(btn);
+        });
+      }
+
+      setupObserver() {
+        const obs = new IntersectionObserver(entries => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add('visible');
+              if (this.scrollLocked) return;
+              const idx = this.slides.indexOf(entry.target);
+              if (idx !== -1) this.updateUI(idx);
+            }
+          });
+        }, { threshold: 0.5 });
+        this.slides.forEach(s => obs.observe(s));
+      }
+
+      applyBackground(slide) {
+        const grads = (slide.dataset.gradients || '').split(/\s+/).filter(Boolean);
+        this.gradientTL.classList.toggle('active', grads.includes('topLeft'));
+        this.gradientTR.classList.toggle('active', grads.includes('topRight'));
+        this.gradientC.classList.toggle('active',  grads.includes('center'));
+        this.gradientB.classList.toggle('active',  grads.includes('bottom'));
+        this.patternBg.classList.toggle('active',  slide.dataset.pattern === 'true');
+      }
+
+      updateUI(idx) {
+        this.currentSlide = idx;
+        this.progressBar.style.width = `${((idx + 1) / this.totalSlides) * 100}%`;
+        this.dots.forEach((d, i) => d.classList.toggle('active', i === idx));
+        this.slideCounter.textContent = `${idx + 1} / ${this.totalSlides}`;
+        history.replaceState(null, '', `#slide-${idx + 1}`);
+        this.applyBackground(this.slides[idx]);
+      }
+
+      advance() { this.goTo(this.currentSlide + 1); }
+      retreat() { this.goTo(this.currentSlide - 1); }
+
+      goTo(idx) {
+        const c = Math.max(0, Math.min(this.totalSlides - 1, idx));
+        this.scrollLocked = true;
+        this.slides[c].scrollIntoView({ behavior: 'smooth' });
+        this.updateUI(c);
+        setTimeout(() => { this.scrollLocked = false; }, 800);
+      }
+
+      setupKeyboard() {
+        document.addEventListener('keydown', e => {
+          if (['ArrowDown', 'ArrowRight', ' '].includes(e.key)) { e.preventDefault(); this.advance(); }
+          if (['ArrowUp', 'ArrowLeft'].includes(e.key))         { e.preventDefault(); this.retreat(); }
+          if (e.key === 'Home') { e.preventDefault(); this.goTo(0); }
+          if (e.key === 'End')  { e.preventDefault(); this.goTo(this.totalSlides - 1); }
+          if (e.key === 'p' || e.key === 'P') { e.preventDefault(); window.open('q3-2026-presenter-view.html', 'presenter', 'width=1000,height=700'); }
+        });
+      }
+
+      setupTouch() {
+        let sy = 0, sx = 0;
+        document.addEventListener('touchstart', e => {
+          sy = e.touches[0].clientY; sx = e.touches[0].clientX;
+        }, { passive: true });
+        document.addEventListener('touchend', e => {
+          const dy = sy - e.changedTouches[0].clientY;
+          const dx = sx - e.changedTouches[0].clientX;
+          if (Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > 40) {
+            if (dy > 0) this.advance(); else this.retreat();
+          }
+        }, { passive: true });
+      }
+
+      setupWheel() {
+        let last = 0;
+        document.addEventListener('wheel', e => {
+          e.preventDefault();
+          const now = Date.now();
+          if (now - last < 800) return;
+          last = now;
+          if (e.deltaY > 0) this.advance(); else this.retreat();
+        }, { passive: false });
+      }
+    }
+
+    const pres = new SlidePresentation();
+
+    /* ============================================================
+       Presenter sync — mirrors saas-to-the-future.html.
+       Main deck (top window) listens for goto, broadcasts slideChanged.
+       ============================================================ */
+    if (window.parent === window) {
+      const channel = new BroadcastChannel('presenter-sync');
+      let fromPresenter = false;
+
+      channel.onmessage = e => {
+        if (e.data.type === 'goto') {
+          fromPresenter = true;
+          if (e.data.restart) pres.slides.forEach(s => s.classList.remove('visible'));
+          pres.goTo(e.data.slide - 1);
+        }
+      };
+
+      const origUpdate = pres.updateUI.bind(pres);
+      pres.updateUI = function (idx) {
+        origUpdate(idx);
+        if (!fromPresenter) channel.postMessage({ type: 'slideChanged', slide: pres.currentSlide + 1 });
+        fromPresenter = false;
+      };
+    }
+  </script>
+
+</body>
+</html>

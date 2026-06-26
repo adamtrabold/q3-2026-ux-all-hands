@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Presenter View — Raising the Bar</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: #111; color: #eee; height: 100vh; display: grid; grid-template-rows: auto 1fr auto; overflow: hidden; }
+
+    /* TOP BAR */
+    .top-bar { display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; background: #1a1a1a; border-bottom: 1px solid #2a2a2a; }
+    .slide-label { font-size: 13px; font-weight: 600; color: #888; letter-spacing: 0.08em; text-transform: uppercase; }
+    .slide-label span { color: #0ECAD4; }
+
+    /* MAIN AREA */
+    .main { display: grid; grid-template-columns: 1fr 1fr; gap: 0; overflow: hidden; }
+
+    /* NOTES PANEL */
+    .notes-panel { padding: 28px 32px; overflow-y: auto; border-right: 1px solid #2a2a2a; }
+    .notes-panel h3 { font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #0ECAD4; margin-bottom: 16px; }
+    .notes-content { font-size: 15px; line-height: 1.75; color: rgba(255,255,255,0.78); }
+    .notes-content p { margin-bottom: 12px; }
+    .notes-content strong { color: #fff; font-weight: 600; }
+    .notes-content em { color: #0ECAD4; font-style: italic; }
+
+    /* SLIDE PREVIEWS */
+    .previews { display: flex; flex-direction: column; background: #0d0d0d; gap: 0; }
+    .preview-panel { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+    .preview-panel h3 { font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #555; padding: 16px 24px 8px; }
+    .preview-panel.current h3 { color: #0ECAD4; }
+    .preview-wrap { flex: 1; padding: 0 24px 12px; position: relative; min-height: 0; }
+    .preview-wrap iframe {
+      width: 100%; height: 100%; border: 1px solid #2a2a2a; border-radius: 6px;
+      background: #1F2426; pointer-events: none;
+    }
+    .preview-panel.current .preview-wrap iframe { border-color: rgba(14,202,212,0.3); }
+
+    /* BOTTOM NAV */
+    .bottom-bar { display: flex; align-items: center; justify-content: center; gap: 16px; padding: 14px 20px; background: #1a1a1a; border-top: 1px solid #2a2a2a; }
+    .nav-btn {
+      background: none; border: 1px solid #333; color: #ccc; font-family: 'Inter', sans-serif;
+      font-size: 13px; font-weight: 500; padding: 8px 24px; border-radius: 6px; cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .nav-btn:hover { border-color: #0ECAD4; color: #0ECAD4; }
+    .nav-btn:active { background: rgba(14,202,212,0.08); }
+    .nav-btn:disabled { opacity: 0.25; cursor: default; border-color: #333; color: #666; }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <div class="slide-label">Slide <span id="currentNum">1</span> of <span id="totalNum">14</span></div>
+  </div>
+
+  <div class="main">
+    <div class="notes-panel">
+      <h3>Speaker notes</h3>
+      <div class="notes-content" id="notesContent"></div>
+    </div>
+    <div class="previews">
+      <div class="preview-panel current">
+        <h3>Current slide</h3>
+        <div class="preview-wrap">
+          <iframe id="currentFrame" src="q3-2026-ux-all-hands-raising-the-bar.html#slide-1" sandbox="allow-scripts allow-same-origin"></iframe>
+        </div>
+      </div>
+      <div class="preview-panel">
+        <h3>Next slide</h3>
+        <div class="preview-wrap">
+          <iframe id="previewFrame" src="q3-2026-ux-all-hands-raising-the-bar.html#slide-2" sandbox="allow-scripts allow-same-origin"></iframe>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bottom-bar">
+    <button class="nav-btn" id="restartBtn">⟲ Restart</button>
+    <button class="nav-btn" id="prevBtn">← Prev</button>
+    <button class="nav-btn" id="nextBtn">Next →</button>
+  </div>
+
+  <script>
+    const TOTAL = 14;
+    let current = 1;
+
+    const notes = {
+      1: `Last all-hands I talked about AI tools changing what we spend our time doing. I'm not going to talk about the tools today — but I do think this is sort of a part two to that topic.`,
+
+      2: `Last time, we talked about the opportunity to finally <em>cook</em> — to own more of the whole thing. That's a huge opportunity.\n\nToday I want to talk about the opportunity to get back to first principles. To get back to what it really means to design.\n\nWhy? Because the question for me is: <strong>where can we, as an organization, be delivering the most value?</strong>`,
+
+      3: `I think it's a good time to remind ourselves that <strong>this is not design.</strong>\n\nThe double diamond. Design thinking. Wireframes. Prototypes.\n\nThese are <em>processes</em>. These are <em>tools</em>. [pause — let it land]`,
+
+      4: `Design is the act of solving problems through constraints. It's the bridge between understanding, intention, and craft. The Universal Traveler calls it "a process of making dreams come true."\n\nEverything else — every framework, every artifact — is a supporting construct.`,
+
+      5: `Doing Design — with a capital D — is never easy. But solving new problems requires raising our internal bar.\n\nWe will not have all the information at the start of a problem. Others will have already been engaging with the problem before we're even in the room. And our work is not about doing a particular set of steps, or getting a screen to a PM.`,
+
+      6: `Process for process's sake has <em>always</em> been a bottleneck.\n\nThe right process is determined by the job needing to be done, the data we have or don't have, the risk profile, the stage and goals of the product. Some products need all the information in the world to move forward. Some areas should <em>rightfully</em> just try stuff out. Some things <em>should</em> have a lot of exploration before we even know if the idea is worth investing in.\n\nIt's not chaos — it's having the seat at the table. We can't be frustrated by that; we need to be driving it.`,
+
+      7: `So the baseline job of a designer is three things.\n\n<strong>One:</strong> ensure we're solving the <em>actual</em> problem, and <em>actually</em> solving it — whatever it takes. <strong>Two:</strong> build resilient systems that support the ways of working we need. <strong>Three:</strong> most importantly, have opinions and drive for our <em>vision</em> — step into the ownership we've been granted.\n\nThat vision work is key. Spending time on things that aren't bought into yet, or aren't part of a clear domain strategy, can be scary — but that's exactly what builds us as thought leaders and puts us ahead of the strategy. Our deep knowledge of our customer gives this group a very specific advantage.`,
+
+      8: `Our team is going to get distracted by shiny things — that's natural.\n\nBut guinea pigs can't use computers, and we don't make food pellets. Our customers aren't lab animals. The job, more than ever, is guiding people toward the <em>right</em> thing — not just <em>a</em> thing. Even when we experiment, it's on us to make sure we're not launching guesses. There's a problem we're trying to solve, and we're testing ways of solving it.`,
+
+      9: `We should have <em>always</em> been centering on the underlying goal. Any and all experiences ultimately serve the goal — every pixel matters.\n\nWe don't design screens, and we don't design experiences. We design <em>outcomes</em>.\n\nDesign is not a math problem. The "correct" solution is the thing that creates the desired outcome — not the specific thing being output.`,
+
+      10: `It's incumbent on us — now more than ever — to use each other to make sure the right things are happening.\n\nDon't suffer in silence. Leverage your manager; your manager leverages me and Rebecca.`,
+
+      11: `If we don't believe we're solving the right problems — or there are problems we should be solving and aren't — we approach it as <em>owners</em> and take it forward.\n\nIncluding using the tools at our disposal to prototype or make it real. Alignment <em>is</em> the work.`,
+
+      12: `So the question we need to be continuously asking ourselves is: <strong>are we delivering our customers' dreams?</strong>\n\nThat's the goal.`,
+
+      13: `The truth is that every decision we make is what our customers experience, day in and day out. Our work <em>is</em> the product. That's a tremendous responsibility.\n\nAs we lean on all these new tools and new ways of getting from A to Z, we have to ask ourselves: do we realize the level of outsized value our work delivers? Are we operating from that place, and stepping into the ownership we've been granted?`,
+
+      14: `So my charge to all of us, as we move into the back half of the year, is to move forward with that level of intentionality and thought — because we truly have so much power to create the dream future for our customers.\n\nYou are all tremendously smart people. Thank you for your efforts day in and day out to move us forward. As we kick off the back half of the year, I cannot wait to evolve our products together. Let's go.`
+    };
+
+    const channel = new BroadcastChannel('presenter-sync');
+    const currentNum = document.getElementById('currentNum');
+    const notesContent = document.getElementById('notesContent');
+    const currentFrame = document.getElementById('currentFrame');
+    const previewFrame = document.getElementById('previewFrame');
+    const restartBtn = document.getElementById('restartBtn');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+
+    function slideHash(slide) {
+      return '#slide-' + slide;
+    }
+
+    function nextSlideHash() {
+      return '#slide-' + Math.min(current + 1, TOTAL);
+    }
+
+    function updateDisplay() {
+      currentNum.textContent = current;
+      notesContent.innerHTML = (notes[current] || '').replace(/\n/g, '<br>');
+      const bust = '?_=' + Date.now();
+      currentFrame.src = 'q3-2026-ux-all-hands-raising-the-bar.html' + bust + slideHash(current);
+      previewFrame.src = 'q3-2026-ux-all-hands-raising-the-bar.html' + bust + nextSlideHash();
+      prevBtn.disabled = current <= 1;
+      nextBtn.disabled = current >= TOTAL;
+    }
+
+    function navigate() {
+      updateDisplay();
+      channel.postMessage({ type: 'goto', slide: current });
+    }
+
+    function goNext() {
+      if (current < TOTAL) { current++; }
+      navigate();
+    }
+
+    function goPrev() {
+      if (current > 1) { current--; }
+      navigate();
+    }
+
+    restartBtn.addEventListener('click', () => {
+      current = 1;
+      updateDisplay();
+      channel.postMessage({ type: 'goto', slide: 1, restart: true });
+    });
+    prevBtn.addEventListener('click', goPrev);
+    nextBtn.addEventListener('click', goNext);
+
+    document.addEventListener('keydown', e => {
+      if (['ArrowRight', 'ArrowDown', ' ', 'Enter'].includes(e.key)) { e.preventDefault(); goNext(); }
+      if (['ArrowLeft', 'ArrowUp'].includes(e.key)) { e.preventDefault(); goPrev(); }
+    });
+
+    channel.onmessage = e => {
+      if (e.data.type === 'slideChanged') {
+        current = e.data.slide;
+        updateDisplay();
+      }
+    };
+
+    navigate();
+  </script>
+</body>
+</html>
